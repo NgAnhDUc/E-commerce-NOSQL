@@ -54,9 +54,12 @@ var userSchema = new mongoose.Schema({
 },{
     timestamps:true
 });
-// userSchema.pre('save', async function (next) {
-//     const salt = bcryct.genSaltSync(10)
-//     this.password = await bcryct.hash(this.password, salt)
-// })
+userSchema.pre('save', async function (next) {
+    if(!this.isModified('password')){
+        next
+    }
+     const salt = bcryct.genSaltSync(10)
+     this.password = await bcryct.hash(this.password, salt)
+ })
 //Export the model
 module.exports = mongoose.model('User', userSchema);
