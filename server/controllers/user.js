@@ -1,5 +1,7 @@
 const User = require('../models/user')
 const asyncHandler = require('express-async-handler')
+const {generateAccessToken,generateRefeshToken} = require('../middlewares/jwt')
+
 const register = asyncHandler(async (req, res) => {
     const { email, password, firstname, lastname } = req.body
     if (!email || !password || !firstname || !lastname)
@@ -29,9 +31,18 @@ const login = asyncHandler(async (req, res) => {
 //plain object
     const response =await User.findOne({email})
     if(response && await response.isCorrectPassword(password)){
+        //Hide password and role in response
         const { password,role, ...userData } =  response.toObject()
+        //Create token
+        const accessToken =generateAccessToken(response._id, role)
+        const refreshToken =generateRefeshToken(response._id)
+        // Save refesh token to DB
+        await User.findByIdAndUpdate(response._id, {refreshToken}, {new:true})
+        //Save refresh token to Cookie
+        res.cookie('refreshToken',refreshToken,{httpOnly: true, maxAge: 7*24*60*60*1000})
         return res.status(200).json({
             sucess: true,
+            accessToken,
             userData
         })  
     }
