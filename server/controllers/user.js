@@ -1,6 +1,8 @@
 const User = require('../models/user')
 const asyncHandler = require('express-async-handler')
 const {generateAccessToken,generateRefeshToken} = require('../middlewares/jwt')
+const { response } = require('express')
+const {verifyAccessToken} = require('../middlewares/verifyToken')
 
 const register = asyncHandler(async (req, res) => {
     const { email, password, firstname, lastname } = req.body
@@ -51,7 +53,17 @@ const login = asyncHandler(async (req, res) => {
     }
 })
 
+const getCurrent = asyncHandler(async (req, res) => {
+    const { _id}= req.user
+    const user = await User.findById( _id)
+    return res.status(200).json({
+        success: false,
+        rs: user ? user : 'User not found'
+    })
+})
+
 module.exports = {
     register,
-    login
+    login,
+    getCurrent
 }
